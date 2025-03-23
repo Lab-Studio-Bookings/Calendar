@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Studio Bookings</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .calendar-container { width: 80%; margin: auto; }
+        .calendar { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            grid-template-rows: auto repeat(6, 1fr);
+            gap: 5px; 
+            margin-top: 10px; 
+        }
+        .day, .header { 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            min-height: 100px; 
+            background: #f9f9f9; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        .header { 
+            font-weight: bold; 
+            background: #ddd; 
+            text-align: center; 
+            min-height: auto;
+        }
+        .event { 
+            background: lightblue; 
+            padding: 5px; 
+            margin: 2px 0; 
+            font-size: 0.8em; 
+            width: 100%;
+            text-align: center;
+            position: relative;
+        }
+        .event button {
+            margin-left: 5px;
+            font-size: 0.7em;
+        }
+        .empty { 
+            background: transparent; 
+            border: none; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Lab Studio Bookings</h1>
+    <button onclick="prevMonth()">Previous</button>
+    <span id="monthYear"></span>
+    <button onclick="nextMonth()">Next</button>
+    
+    <div class="calendar-container">
+        <div id="calendar" class="calendar"></div>
+    </div>
+    
+    <h2>Add Booking</h2>
+    <form id="bookingForm">
+        <input type="password" id="password" placeholder="Enter Password" required><br>
+        <input type="date" id="date" required><br>
+        <input type="time" id="startTime" required>
+        <input type="time" id="endTime" required><br>
+        <input type="text" id="title" placeholder="Title" required><br>
+        <button type="submit">Add Booking</button>
+    </form>
+    
+    <script>
+        let currentDate = new Date();
+        let storedEvents = localStorage.getItem("events");
+        let events = storedEvents ? JSON.parse(storedEvents) : [];
+        if (!Array.isArray(events)) {
+            events = []; // Ensure it's an array
+        }
+
+        function renderCalendar() {
+            let year = currentDate.getFullYear();
+            let month = currentDate.getMonth();
+            let firstDay = new Date(year, month, 1).getDay();
+            let daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            document.getElementById("monthYear").textContent = currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+            
+            let calendar = document.getElementById("calendar");
+            calendar.innerHTML = "";
+            
+            const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            daysOfWeek.forEach(day => {
+                let div = document.createElement("div");
+                div.textContent = day;
+                div.className = "header";
+                calendar.appendChild(div);
+            });
+            
+            let totalCells = 42;
+            let cells = [];
+            
+            for (let i = 0; i < totalCells; i++) {
+                let cell = document.createElement("div");
+                cell.className = "day";
+                let dayNum = i - firstDay + 1;
+                let validDay = dayNum > 0 && dayNum <= daysInMonth;
+                
+                if (validDay) {
+                    let formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                    cell.innerHTML = `<strong>${dayNum}</strong>`;
+                    let eventList = events.filter(e => e.date === formattedDate);
+                    eventList.forEach((e, eventIndex) => {
+                        let eventDiv = document.createElement("div");
+                        eventDiv.className = "event";
+                        eventDiv.innerHTML = `${e.startTime} - ${e.endTime}: ${e.title} 
+                            <button onclick="requestDelete('${formattedDate}', ${eventIndex})">✖</button>`;
+                        cell.appendChild(eventDiv);
+                    });
+                } else {
+                    cell.classList.add("empty");
+                }
+                cells.push(cell);
+            }
+            
+            cells.forEach(cell => calendar.appendChild(cell));
+        }
+
+        function requestDelete(date, index) {
+            let password = prompt("Enter password:");
+            if (password !== "ObiToto87") {
+                alert("Incorrect password!");
+                return;
+            }
+            
+            // Debugging log for delete
+            console.log('Deleting event at index', index, 'on date', date);
+            
+            events = events.filter((e, i) => !(e.date === date && i === index));
+            localStorage.setItem("events", JSON.stringify(events));
+            renderCalendar();
+        }
+
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        document.getElementById("bookingForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            let password = document.getElementById("password").value;
+            if (password !== "ObiToto87") {
+                alert("Incorrect password!");
+                return;
+            }
+
+            let date = document.getElementById("date").value;
+            let startTime = document.getElementById("startTime").value;
+            let endTime = document.getElementById("endTime").value;
+            let title = document.getElementById("title").value;
+
+            // Debugging log to check form values
+            console.log('Password:', password);
+            console.log('Date:', date);
+            console.log('Start time:', startTime);
+            console.log('End time:', endTime);
+            console.log('Title:', title);
+
+            if (!date || !startTime || !endTime || !title) {
+                alert("Please fill out all fields.");
+                return;
+            }
+
+            let newEvent = { date, startTime, endTime, title };
+            events.push(newEvent);
+            localStorage.setItem("events", JSON.stringify(events));
+
+            document.getElementById("bookingForm").reset();
+            renderCalendar();
+        });
+        
+        document.addEventListener("DOMContentLoaded", renderCalendar);
+    </script>
+</body>
+</html>
