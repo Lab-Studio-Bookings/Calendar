@@ -69,7 +69,6 @@
         <button type="submit">Add Booking</button>
     </form>
     
-    <script src="calendar.js?v=2"></script>
     <script>
         let currentDate = new Date();
         let storedEvents = localStorage.getItem("events");
@@ -133,6 +132,9 @@
                 return;
             }
             
+            // Debugging log for delete
+            console.log('Deleting event at index', index, 'on date', date);
+            
             events = events.filter((e, i) => !(e.date === date && i === index));
             localStorage.setItem("events", JSON.stringify(events));
             renderCalendar();
@@ -160,6 +162,13 @@
             let startTime = document.getElementById("startTime").value;
             let endTime = document.getElementById("endTime").value;
             let title = document.getElementById("title").value;
+
+            // Debugging log to check form values
+            console.log('Password:', password);
+            console.log('Date:', date);
+            console.log('Start time:', startTime);
+            console.log('End time:', endTime);
+            console.log('Title:', title);
 
             if (!date || !startTime || !endTime || !title) {
                 alert("Please fill out all fields.");
