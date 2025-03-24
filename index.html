@@ -74,7 +74,7 @@
         let storedEvents = localStorage.getItem("events");
         let events = storedEvents ? JSON.parse(storedEvents) : [];
         if (!Array.isArray(events)) {
-            events = []; // Ensure it's an array
+            events = []; 
         }
 
         function renderCalendar() {
@@ -132,12 +132,15 @@
                 return;
             }
             
-            // Debugging log for delete
-            console.log('Deleting event at index', index, 'on date', date);
+            let eventIndex = events.findIndex((e, i) => e.date === date && i === index);
             
-            events = events.filter((e, i) => !(e.date === date && i === index));
-            localStorage.setItem("events", JSON.stringify(events));
-            renderCalendar();
+            if (eventIndex !== -1) {
+                events.splice(eventIndex, 1);
+                localStorage.setItem("events", JSON.stringify(events));
+                renderCalendar();
+            } else {
+                alert("Event not found.");
+            }
         }
 
         function prevMonth() {
@@ -162,13 +165,6 @@
             let startTime = document.getElementById("startTime").value;
             let endTime = document.getElementById("endTime").value;
             let title = document.getElementById("title").value;
-
-            // Debugging log to check form values
-            console.log('Password:', password);
-            console.log('Date:', date);
-            console.log('Start time:', startTime);
-            console.log('End time:', endTime);
-            console.log('Title:', title);
 
             if (!date || !startTime || !endTime || !title) {
                 alert("Please fill out all fields.");
